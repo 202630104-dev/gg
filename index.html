@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>행운 거북이 뽑기 🐢</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 350px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* 거북이 스타일 */
+        .turtle-box {
+            font-size: 100px;
+            margin: 20px 0;
+            transition: transform 0.2s ease, filter 0.3s ease;
+            user-select: none;
+        }
+
+        /* 클릭 시 튀어오르는 효과 */
+        .bounce {
+            animation: bounce 0.3s ease;
+        }
+
+        @keyframes bounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* 버튼 스타일 */
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        /* 결과 메시지 */
+        .message {
+            margin-top: 25px;
+            font-size: 24px;
+            font-weight: bold;
+            min-height: 36px;
+        }
+
+        .win {
+            color: #2e7d32;
+            animation: pop 0.4s ease-out;
+        }
+
+        .lose {
+            color: #666;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>행운 거북이 뽑기</h1>
+    <div id="turtle" class="turtle-box">🐢</div>
+    <button id="draw-btn" onclick="drawTurtle()">거북이 뽑기!</button>
+    <div id="message" class="message"></div>
+</div>
+
+<script>
+    // 거북이 색상 리스트 (색상 이름, CSS filter 값, 당첨 여부)
+    const turtles = [
+        { name: "초록색", filter: "hue-rotate(0deg) saturate(1)", isWin: true },          // 기본 (초록) -> 당첨!
+        { name: "빨간색", filter: "hue-rotate(240deg) saturate(2)", isWin: false },
+        { name: "파란색", filter: "hue-rotate(140deg) saturate(2)", isWin: false },
+        { name: "보라색", filter: "hue-rotate(180deg) saturate(2)", isWin: false },
+        { name: "노란색", filter: "hue-rotate(300deg) saturate(3)", isWin: false },
+        { name: "주황색", filter: "hue-rotate(270deg) saturate(3)", isWin: false },
+        { name: "분홍색", filter: "hue-rotate(210deg) saturate(2)", isWin: false },
+        { name: "검은색", filter: "brightness(0.3)", isWin: false }
+    ];
+
+    function drawTurtle() {
+        const turtleElement = document.getElementById('turtle');
+        const messageElement = document.getElementById('message');
+
+        // 통신 애니메이션 효과 재적용
+        turtleElement.classList.remove('bounce');
+        void turtleElement.offsetWidth; // 리플로우 강제
+        turtleElement.classList.add('bounce');
+
+        // 랜덤으로 거북이 선택
+        const randomIndex = Math.floor(Math.random() * turtles.length);
+        const selectedTurtle = turtles[randomIndex];
+
+        // 거북이 색상 변경 (CSS Filter 적용)
+        turtleElement.style.filter = selectedTurtle.filter;
+
+        // 결과 판정 및 메시지 출력
+        if (selectedTurtle.isWin) {
+            messageElement.textContent = "🎉 행운 당첨! 🎉";
+            messageElement.className = "message win";
+        } else {
+            messageElement.textContent = `${selectedTurtle.name} 거북이 (아쉬워요!)`;
+            messageElement.className = "message lose";
+        }
+    }
+</script>
+
+</body>
+</html>
