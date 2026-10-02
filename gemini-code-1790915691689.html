@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>뽀짝 스터디 플래너</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <style>
+    :root {
+      --bg-color: #FFF9FA;
+      --card-bg: #FFFFFF;
+      --primary-pink: #FFB7B2;
+      --primary-pink-dark: #FF8B83;
+      --soft-pink: #FFF0F5;
+      --soft-yellow: #FFF9D2;
+      --soft-mint: #E2F5ED;
+      --soft-lavender: #F3E8FF;
+      --text-main: #4A4A4A;
+      --text-muted: #8C8C8C;
+      --border-radius-lg: 24px;
+      --border-radius-md: 16px;
+      --shadow-soft: 0 10px 25px rgba(255, 183, 178, 0.2);
+      --shadow-subtle: 0 4px 15px rgba(0, 0, 0, 0.03);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Gowun Dodum', 'Noto Sans KR', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 10px;
+      background-image: radial-gradient(#FFD1DC 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 680px;
+      background: var(--card-bg);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-soft);
+      padding: 32px 28px;
+      position: relative;
+      border: 3px solid #FFF;
+    }
+
+    /* Header & Branding */
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .brand-title {
+      font-size: 2rem;
+      color: var(--primary-pink-dark);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: bold;
+    }
+
+    .brand-title span.badge {
+      background: var(--soft-yellow);
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      color: #9E7C00;
+      border: 1px solid #FFE680;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    /* Progress Bar Step Indicator */
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      position: relative;
+      padding: 0 10px;
+    }
+
+    .stepper::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 30px;
+      right: 30px;
+      height: 4px;
+      background: #F0F0F0;
+      transform: translateY(-50%);
+      z-index: 1;
+      border-radius: 2px;
+    }
+
+    .step-item {
+      position: relative;
+      z-index: 2;
+      background: #FFF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #F0F0F0;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      border: 2px solid #FFF;
+    }
+
+    .step-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .step-item.active .step-number {
+      background: var(--primary-pink);
+      color: #FFF;
+      box-shadow: 0 4px 10px rgba(255, 183, 178, 0.5);
+      transform: scale(1.1);
+    }
+
+    .step-item.active .step-label {
+      color: var(--primary-pink-dark);
+    }
+
+    .step-item.completed .step-number {
+      background: var(--soft-mint);
+      color: #388E3C;
+    }
+
+    /* Step Content Section */
+    .step-panel {
+      display: none;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .step-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      color: #333;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-card {
+      background: #FAF9F8;
+      border-radius: var(--border-radius-md);
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #F0ECE9;
+    }
+
+    /* Forms & Inputs */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #555;
+    }
+
+    .input-field, select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #EAEAEA;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+      background: #FFF;
+    }
+
+    .input-field:focus, select:focus {
+      border-color: var(--primary-pink);
+    }
+
+    .subject-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1.2fr auto;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+      background: #FFF;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .btn-delete {
+      background: #FFECEB;
+      color: #FF5252;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .btn-delete:hover {
+      background: #FFDAD8;
+    }
+
+    .btn-add-subject {
+      width: 100%;
+      background: #FFF;
+      border: 2px dashed var(--primary-pink);
+      color: var(--primary-pink-dark);
+      padding: 10px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add-subject:hover {
+      background: var(--soft-pink);
+    }
+
+    /* Target Cards */
+    .target-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .target-card {
+      background: #FFF;
+      border-radius: var(--border-radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-subtle);
+      border-left: 5px solid var(--primary-pink);
+    }
+
+    .target-card.type-lang { border-left-color: #FFB7B2; background: #FFF9F9; }
+    .target-card.type-math { border-left-color: #A2E8DD; background: #F4FCFA; }
+    .target-card.type-memo { border-left-color: #FFE699; background: #FFFDF5; }
+
+    .target-card h4 {
+      font-size: 1.05rem;
+      color: #333;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .target-amount {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--primary-pink-dark);
+      margin-top: 4px;
+    }
+
+    /* Study Tip Cards */
+    .tip-card {
+      background: #FFF;
+      border-radius: var(--border-radius-md);
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .tip-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .tip-tag.lang { background: var(--soft-pink); color: #E56A63; }
+    .tip-tag.math { background: var(--soft-mint); color: #2E7D32; }
+    .tip-tag.memo { background: var(--soft-yellow); color: #9E7C00; }
+
+    .tip-steps {
+      list-style-type: none;
+      margin-top: 8px;
+    }
+
+    .tip-steps li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .tip-steps li::before {
+      content: '✔';
+      position: absolute;
+      left: 0;
+      color: var(--primary-pink-dark);
+      font-size: 0.8rem;
+    }
+
+    /* Planner Checklist */
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #FFF;
+      padding: 14px 16px;
+      border-radius: 14px;
+      box-shadow: var(--shadow-subtle);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .todo-item.completed {
+      opacity: 0.6;
+      background: #F9F9F9;
+    }
+
+    .todo-item.completed label {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .custom-checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid #DBD3D0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .todo-item.completed .custom-checkbox {
+      background: var(--primary-pink);
+      border-color: var(--primary-pink);
+      color: #FFF;
+    }
+
+    .todo-label {
+      flex: 1;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .btn-add-todo-box {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    /* Action Buttons */
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 28px;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border: none;
+      border-radius: var(--border-radius-md);
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-prev {
+      background: #F0EDED;
+      color: #666;
+    }
+
+    .btn-prev:hover {
+      background: #E2DFDF;
+    }
+
+    .btn-next {
+      background: var(--primary-pink);
+      color: #FFF;
+      margin-left: auto;
+      box-shadow: 0 4px 12px rgba(255, 183, 178, 0.4);
+    }
+
+    .btn-next:hover {
+      background: var(--primary-pink-dark);
+      transform: translateY(-2px);
+    }
+
+    /* Banner Helper Mascot */
+    .mascot-banner {
+      background: var(--soft-pink);
+      border-radius: var(--border-radius-md);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .mascot-icon {
+      font-size: 1.8rem;
+    }
+
+    .mascot-text {
+      font-size: 0.85rem;
+      color: #66525E;
+      line-height: 1.3;
+    }
+
+    @media (max-width: 580px) {
+      .subject-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .subject-row input:first-child {
+        grid-column: span 2;
+      }
+      .app-container {
+        padding: 20px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <h1 class="brand-title">
+        ✏️ 뽀짝 스터디 플래너
+        <span class="badge">D-Day 스무스 계산</span>
+      </h1>
+      <p class="subtitle">시험범위 분할부터 과목별 꿀팁, 스터디 플래너까지 한 번에!</p>
+    </header>
+
+    <!-- Step Progress Bar -->
+    <div class="stepper">
+      <div class="step-item active" onclick="goToStep(1)">
+        <div class="step-number">1</div>
+        <div class="step-label">범위 입력</div>
+      </div>
+      <div class="step-item" onclick="goToStep(2)">
+        <div class="step-number">2</div>
+        <div class="step-label">오늘 분량</div>
+      </div>
+      <div class="step-item" onclick="goToStep(3)">
+        <div class="step-number">3</div>
+        <div class="step-label">공부 꿀팁</div>
+      </div>
+      <div class="step-item" onclick="goToStep(4)">
+        <div class="step-number">4</div>
+        <div class="step-label">내 플래너</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: 시험 범위 입력 -->
+    <div class="step-panel active" id="step1">
+      <div class="mascot-banner">
+        <span class="mascot-icon">🐥</span>
+        <div class="mascot-text">
+          <b>반가워!</b> 시험 목표 날짜와 과목별 범위를 적어줘. 뽀짝이가 하루에 얼마만큼 해야 할지 딱 정해줄게!
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="form-group">
+          <label for="exam-date">🗓️ 시험 목표 날짜 (D-Day)</label>
+          <input type="date" id="exam-date" class="input-field">
+        </div>
+
+        <div class="form-group">
+          <label>📚 과목 및 시험 범위 입력</label>
+          <div id="subject-list">
+            <!-- Dynamic Subject Rows -->
+          </div>
+          <button type="button" class="btn-add-subject" onclick="addSubjectRow()">+ 과목 추가하기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: 오늘의 공부량 -->
+    <div class="step-panel" id="step2">
+      <div class="mascot-banner">
+        <span class="mascot-icon">📝</span>
+        <div class="mascot-text">
+          시험까지 남은 기간 동안 <b>매일 해야 할 추천 공부량</b>이야! 부담 갖지 말고 조금씩 해보자!
+        </div>
+      </div>
+
+      <div id="dday-info" style="text-align: center; margin-bottom: 16px; font-weight: bold; color: var(--primary-pink-dark);">
+        <!-- D-Day Message -->
+      </div>
+
+      <div class="target-grid" id="target-card-container">
+        <!-- Generated Cards -->
+      </div>
+    </div>
+
+    <!-- STEP 3: 맞춤형 공부 꿀팁 -->
+    <div class="step-panel" id="step3">
+      <div class="mascot-banner">
+        <span class="mascot-icon">💡</span>
+        <div class="mascot-text">
+          과목 특성에 맞춰 공부하면 효율이 2배! 뽀짝이가 알려주는 <b>효과적인 공부법</b>을 확인해봐!
+        </div>
+      </div>
+
+      <div id="tips-container">
+        <!-- Generated Tips -->
+      </div>
+    </div>
+
+    <!-- STEP 4: 나만의 스터디 플래너 -->
+    <div class="step-panel" id="step4">
+      <div class="mascot-banner">
+        <span class="mascot-icon">🎉</span>
+        <div class="mascot-text">
+          <b>오늘의 스터디 플래너 완성!</b> 완료할 때마다 체크하면 신나는 폭죽 축하가 터져!
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h3 class="panel-title">✅ Today's To-Do List</h3>
+        <div class="todo-list" id="todo-container">
+          <!-- Todos -->
+        </div>
+
+        <div class="btn-add-todo-box">
+          <input type="text" id="new-todo-input" class="input-field" placeholder="추가로 해야 할 일 입력하기...">
+          <button class="btn btn-next" style="padding: 10px 18px;" onclick="addCustomTodo()">추가</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons">
+      <button class="btn btn-prev" id="btn-prev" onclick="prevStep()" style="display: none;">이전</button>
+      <button class="btn btn-next" id="btn-next" onclick="nextStep()">다음 단계로 ➔</button>
+    </div>
+  </div>
+
+  <script>
+    // State Management
+    let currentStep = 1;
+    let subjects = [
+      { id: 1, name: "국어", amount: 45, unit: "p", type: "lang" },
+      { id: 2, name: "수학", amount: 20, unit: "문제", type: "math" },
+      { id: 3, name: "역사", amount: 15, unit: "장", type: "memo" }
+    ];
+    let todos = [];
+
+    // Init Logic
+    document.addEventListener("DOMContentLoaded", () => {
+      // Default Date: Today + 7 Days
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 7);
+      document.getElementById('exam-date').value = defaultDate.toISOString().substring(0, 10);
+
+      loadLocalStorage();
+      renderSubjectRows();
+    });
+
+    // Step Controller
+    function updateStepUI() {
+      // Update Stepper Badges
+      document.querySelectorAll('.step-item').forEach((item, idx) => {
+        const stepNum = idx + 1;
+        item.classList.remove('active', 'completed');
+        if (stepNum === currentStep) {
+          item.classList.add('active');
+        } else if (stepNum < currentStep) {
+          item.classList.add('completed');
+        }
+      });
+
+      // Update Panels
+      document.querySelectorAll('.step-panel').forEach((panel, idx) => {
+        panel.classList.toggle('active', idx + 1 === currentStep);
+      });
+
+      // Update Prev/Next Buttons
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+
+      btnPrev.style.display = currentStep === 1 ? 'none' : 'block';
+      
+      if (currentStep === 4) {
+        btnNext.textContent = '✨ 처음 단계로';
+      } else {
+        btnNext.textContent = '다음 단계로 ➔';
+      }
+
+      // Step Trigger Actions
+      if (currentStep === 2) calculateDailyTarget();
+      if (currentStep === 3) generateTips();
+      if (currentStep === 4) setupPlanner();
+
+      saveLocalStorage();
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+      updateStepUI();
+    }
+
+    function nextStep() {
+      if (currentStep < 4) {
+        currentStep++;
+      } else {
+        currentStep = 1;
+      }
+      updateStepUI();
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepUI();
+      }
+    }
+
+    // Step 1: Subjects Handler
+    function renderSubjectRows() {
+      const container = document.getElementById('subject-list');
+      container.innerHTML = '';
+
+      subjects.forEach((subj) => {
+        const row = document.createElement('div');
+        row.className = 'subject-row';
+        row.innerHTML = `
+          <input type="text" class="input-field" placeholder="과목명" value="${subj.name}" onchange="updateSubject(${subj.id}, 'name', this.value)">
+          <input type="number" class="input-field" placeholder="전체범위" value="${subj.amount}" onchange="updateSubject(${subj.id}, 'amount', this.value)">
+          <select class="input-field" onchange="updateSubject(${subj.id}, 'unit', this.value)">
+            <option value="페이지" ${subj.unit === '페이지' || subj.unit === 'p' ? 'selected' : ''}>페이지(p)</option>
+            <option value="장" ${subj.unit === '장' ? 'selected' : ''}>장</option>
+            <option value="문제" ${subj.unit === '문제' ? 'selected' : ''}>문제</option>
+            <option value="단어" ${subj.unit === '단어' ? 'selected' : ''}>단어</option>
+          </select>
+          <select class="input-field" onchange="updateSubject(${subj.id}, 'type', this.value)">
+            <option value="lang" ${subj.type === 'lang' ? 'selected' : ''}>국어/외국어</option>
+            <option value="math" ${subj.type === 'math' ? 'selected' : ''}>수학/이과</option>
+            <option value="memo" ${subj.type === 'memo' ? 'selected' : ''}>탐구/암기</option>
+          </select>
+          <button type="button" class="btn-delete" onclick="removeSubject(${subj.id})">✕</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function addSubjectRow() {
+      const newId = Date.now();
+      subjects.push({ id: newId, name: "", amount: 10, unit: "페이지", type: "lang" });
+      renderSubjectRows();
+    }
+
+    function removeSubject(id) {
+      if (subjects.length <= 1) {
+        alert("최소 1개 이상의 과목이 필요합니다!");
+        return;
+      }
+      subjects = subjects.filter(s => s.id !== id);
+      renderSubjectRows();
+    }
+
+    function updateSubject(id, field, value) {
+      const target = subjects.find(s => s.id === id);
+      if (target) {
+        if (field === 'amount') value = Math.max(1, parseInt(value) || 1);
+        target[field] = value;
+      }
+    }
+
+    // Step 2: D-Day & Calculation Logic
+    function getRemainingDays() {
+      const targetDateVal = document.getElementById('exam-date').value;
+      if (!targetDateVal) return 1;
+
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const target = new Date(targetDateVal);
+      target.setHours(0,0,0,0);
+
+      const diffTime = target - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      return diffDays > 0 ? diffDays : 1; // Minimum 1 day
+    }
+
+    function calculateDailyTarget() {
+      const days = getRemainingDays();
+      const infoContainer = document.getElementById('dday-info');
+      infoContainer.innerHTML = `🌟 시험까지 <b>${days}일</b> 남았습니다!`;
+
+      const container = document.getElementById('target-card-container');
+      container.innerHTML = '';
+
+      subjects.forEach(subj => {
+        const dailyAmount = Math.ceil(subj.amount / days);
+        const card = document.createElement('div');
+        card.className = `target-card type-${subj.type}`;
+
+        let typeName = "국어/외국어";
+        if (subj.type === 'math') typeName = "수학/이과";
+        if (subj.type === 'memo') typeName = "탐구/암기";
+
+        card.innerHTML = `
+          <h4>
+            <span>${subj.name || '미정 과목'}</span>
+            <span style="font-size:0.75rem; color:#888; font-weight:normal;">${typeName}</span>
+          </h4>
+          <div style="font-size:0.85rem; color:#666;">전체 범위: ${subj.amount}${subj.unit}</div>
+          <div class="target-amount">오늘 하루: 약 ${dailyAmount} ${subj.unit}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Step 3: Tips Generator
+    function generateTips() {
+      const container = document.getElementById('tips-container');
+      container.innerHTML = '';
+
+      const tipGuides = {
+        lang: {
+          title: "국어 & 외국어 과목 꿀팁",
+          class: "lang",
+          icon: "📖",
+          steps: [
+            "지문 먼저 독해하기: 전체 맥락과 주제를 파악한 뒤 세부 문제로 들어가세요.",
+            "핵심 키워드 정복: 반복되는 단어나 어휘는 노트를 만들어 따로 정리하세요.",
+            "소리 내어 읽기: 어색한 문장이나 문법 구조를 쉽게 파악할 수 있습니다."
+          ]
+        },
+        math: {
+          title: "수학 & 이과 과목 꿀팁",
+          class: "math",
+          icon: "📐",
+          steps: [
+            "개념 정확히 이해하기: 공식을 단순히 암기하기보다 유도 과정을 복습하세요.",
+            "오답 노트 작성: 틀린 문제는 오답 원인을 적고 24시간 뒤 다시 풀어보세요.",
+            "다양한 유형 접근: 대표 예제부터 어려운 수능/학평 기출로 점진 확장하세요."
+          ]
+        },
+        memo: {
+          title: "탐구 & 암기 과목 꿀팁",
+          class: "memo",
+          icon: "💡",
+          steps: [
+            "백지 복습법: 인쇄된 개념을 보고 외운 후, 아무것도 없는 종이에 스케치하듯 쓰세요.",
+            "마인드맵 활용: 큰 단원부터 세부 내용으로 가지를 뻗어나가듯 구조화하세요.",
+            "인터벌 암기: 한 번에 오래 외우기보다 20분 집중 후 5분 쉬는 주기를 반복하세요."
+          ]
+        }
+      };
+
+      const addedTypes = new Set();
+      subjects.forEach(s => addedTypes.add(s.type));
+
+      addedTypes.forEach(type => {
+        const tip = tipGuides[type];
+        if (!tip) return;
+
+        const card = document.createElement('div');
+        card.className = 'tip-card';
+        card.innerHTML = `
+          <span class="tip-tag ${tip.class}">${tip.icon} ${tip.title}</span>
+          <ul class="tip-steps">
+            ${tip.steps.map(step => `<li>${step}</li>`).join('')}
+          </ul>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Step 4: Planner Checklist Logic
+    function setupPlanner() {
+      const days = getRemainingDays();
+      
+      // Auto-populate from calculated subjects if list empty
+      if (todos.length === 0) {
+        todos = subjects.map(s => {
+          const daily = Math.ceil(s.amount / days);
+          return {
+            id: Date.now() + Math.random(),
+            text: `${s.name || '과목'} ${daily} ${s.unit} 공부하기`,
+            completed: false
+          };
+        });
+      }
+
+      renderTodos();
+    }
+
+    function renderTodos() {
+      const container = document.getElementById('todo-container');
+      container.innerHTML = '';
+
+      todos.forEach(todo => {
+        const item = document.createElement('div');
+        item.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+        item.innerHTML = `
+          <div class="custom-checkbox" onclick="toggleTodo(${todo.id})">
+            ${todo.completed ? '✔' : ''}
+          </div>
+          <label class="todo-label" onclick="toggleTodo(${todo.id})">${todo.text}</label>
+          <button class="btn-delete" onclick="removeTodo(${todo.id})">✕</button>
+        `;
+        container.appendChild(item);
+      });
+
+      saveLocalStorage();
+    }
+
+    function toggleTodo(id) {
+      const todo = todos.find(t => t.id === id);
+      if (todo) {
+        todo.completed = !todo.completed;
+        if (todo.completed) {
+          triggerConfetti();
+        }
+        renderTodos();
+      }
+    }
+
+    function addCustomTodo() {
+      const input = document.getElementById('new-todo-input');
+      const text = input.value.trim();
+      if (text) {
+        todos.push({
+          id: Date.now(),
+          text: text,
+          completed: false
+        });
+        input.value = '';
+        renderTodos();
+      }
+    }
+
+    function removeTodo(id) {
+      todos = todos.filter(t => t.id !== id);
+      renderTodos();
+    }
+
+    // Celebration Confetti Effect
+    function triggerConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 70,
+          spread: 60,
+          origin: { y: 0.7 },
+          colors: ['#FFB7B2', '#FFD1DC', '#A2E8DD', '#FFE699']
+        });
+      }
+    }
+
+    // Storage System
+    function saveLocalStorage() {
+      const data = {
+        subjects,
+        todos,
+        examDate: document.getElementById('exam-date').value
+      };
+      localStorage.setItem('bbo_djak_study_data', JSON.stringify(data));
+    }
+
+    function loadLocalStorage() {
+      const saved = localStorage.getItem('bbo_djak_study_data');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.subjects && parsed.subjects.length > 0) subjects = parsed.subjects;
+          if (parsed.todos) todos = parsed.todos;
+          if (parsed.examDate) document.getElementById('exam-date').value = parsed.examDate;
+        } catch (e) {
+          console.error("Localstorage parse error", e);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
