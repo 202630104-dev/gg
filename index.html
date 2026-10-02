@@ -1,934 +1,696 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>뽀짝 스터디 플래너</title>
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
-  <!-- Canvas Confetti Library -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  
-  <style>
-    :root {
-      --bg-color: #FFF9FA;
-      --card-bg: #FFFFFF;
-      --primary-pink: #FFB7B2;
-      --primary-pink-dark: #FF8B83;
-      --soft-pink: #FFF0F5;
-      --soft-yellow: #FFF9D2;
-      --soft-mint: #E2F5ED;
-      --soft-lavender: #F3E8FF;
-      --text-main: #4A4A4A;
-      --text-muted: #8C8C8C;
-      --border-radius-lg: 24px;
-      --border-radius-md: 16px;
-      --shadow-soft: 0 10px 25px rgba(255, 183, 178, 0.2);
-      --shadow-subtle: 0 4px 15px rgba(0, 0, 0, 0.03);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐣 뽀짝 스터디 플래너 - 귀여운 시험 D-Day 스터디 플래너</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bbojak: {
+                            pink: '#FFF0F5',
+                            pinkDark: '#FF7597',
+                            pinkHover: '#FF5380',
+                            yellow: '#FFFBEA',
+                            yellowDark: '#F7C948',
+                            mint: '#EBFBEE',
+                            mintDark: '#51CF66',
+                            lavender: '#F3F0FF',
+                            lavenderDark: '#9C36B5',
+                            coral: '#FFE3E3',
+                            bg: '#FFFDF9',
+                            card: '#FFFFFF',
+                            text: '#343A40',
+                            subtext: '#868E96'
+                        }
+                    },
+                    borderRadius: {
+                        '3xl': '1.75rem',
+                        '4xl': '2.25rem',
+                    },
+                    boxShadow: {
+                        'bbojak': '0 12px 30px -5px rgba(255, 117, 151, 0.2), 0 4px 12px -2px rgba(0, 0, 0, 0.03)',
+                        'bbojak-sm': '0 4px 14px -2px rgba(255, 117, 151, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Gowun Dodum', 'Noto Sans KR', sans-serif;
-    }
+    <style>
+        body {
+            font-family: 'Gowun Dodum', 'Noto Sans KR', sans-serif;
+            background-color: #FFFDF9;
+            color: #343A40;
+            background-image: 
+                radial-gradient(#FFD8A8 1.5px, transparent 1.5px), 
+                radial-gradient(#FCC2D7 1.5px, #FFFDF9 1.5px);
+            background-size: 36px 36px;
+            background-position: 0 0, 18px 18px;
+        }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px 10px;
-      background-image: radial-gradient(#FFD1DC 1px, transparent 1px);
-      background-size: 24px 24px;
-    }
+        .stamp-effect {
+            animation: stampBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes stampBounce {
+            0% { transform: scale(2) rotate(-15deg); opacity: 0; }
+            100% { transform: scale(1) rotate(-4deg); opacity: 1; }
+        }
 
-    .app-container {
-      width: 100%;
-      max-width: 680px;
-      background: var(--card-bg);
-      border-radius: var(--border-radius-lg);
-      box-shadow: var(--shadow-soft);
-      padding: 32px 28px;
-      position: relative;
-      border: 3px solid #FFF;
-    }
-
-    /* Header & Branding */
-    header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .brand-title {
-      font-size: 2rem;
-      color: var(--primary-pink-dark);
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-weight: bold;
-    }
-
-    .brand-title span.badge {
-      background: var(--soft-yellow);
-      font-size: 0.85rem;
-      padding: 4px 10px;
-      border-radius: 20px;
-      color: #9E7C00;
-      border: 1px solid #FFE680;
-    }
-
-    .subtitle {
-      font-size: 0.95rem;
-      color: var(--text-muted);
-    }
-
-    /* Progress Bar Step Indicator */
-    .stepper {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 30px;
-      position: relative;
-      padding: 0 10px;
-    }
-
-    .stepper::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 30px;
-      right: 30px;
-      height: 4px;
-      background: #F0F0F0;
-      transform: translateY(-50%);
-      z-index: 1;
-      border-radius: 2px;
-    }
-
-    .step-item {
-      position: relative;
-      z-index: 2;
-      background: #FFF;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .step-number {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #F0F0F0;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 0.95rem;
-      transition: all 0.3s ease;
-      border: 2px solid #FFF;
-    }
-
-    .step-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .step-item.active .step-number {
-      background: var(--primary-pink);
-      color: #FFF;
-      box-shadow: 0 4px 10px rgba(255, 183, 178, 0.5);
-      transform: scale(1.1);
-    }
-
-    .step-item.active .step-label {
-      color: var(--primary-pink-dark);
-    }
-
-    .step-item.completed .step-number {
-      background: var(--soft-mint);
-      color: #388E3C;
-    }
-
-    /* Step Content Section */
-    .step-panel {
-      display: none;
-      animation: fadeIn 0.4s ease-in-out;
-    }
-
-    .step-panel.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .panel-title {
-      font-size: 1.25rem;
-      color: #333;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .panel-card {
-      background: #FAF9F8;
-      border-radius: var(--border-radius-md);
-      padding: 20px;
-      margin-bottom: 20px;
-      border: 1px solid #F0ECE9;
-    }
-
-    /* Forms & Inputs */
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #555;
-    }
-
-    .input-field, select {
-      width: 100%;
-      padding: 12px 14px;
-      border: 2px solid #EAEAEA;
-      border-radius: 12px;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.2s ease;
-      background: #FFF;
-    }
-
-    .input-field:focus, select:focus {
-      border-color: var(--primary-pink);
-    }
-
-    .subject-row {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr 1fr 1.2fr auto;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 12px;
-      background: #FFF;
-      padding: 10px;
-      border-radius: 12px;
-      box-shadow: var(--shadow-subtle);
-    }
-
-    .btn-delete {
-      background: #FFECEB;
-      color: #FF5252;
-      border: none;
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.2s;
-    }
-
-    .btn-delete:hover {
-      background: #FFDAD8;
-    }
-
-    .btn-add-subject {
-      width: 100%;
-      background: #FFF;
-      border: 2px dashed var(--primary-pink);
-      color: var(--primary-pink-dark);
-      padding: 10px;
-      border-radius: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-add-subject:hover {
-      background: var(--soft-pink);
-    }
-
-    /* Target Cards */
-    .target-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 14px;
-    }
-
-    .target-card {
-      background: #FFF;
-      border-radius: var(--border-radius-md);
-      padding: 16px;
-      box-shadow: var(--shadow-subtle);
-      border-left: 5px solid var(--primary-pink);
-    }
-
-    .target-card.type-lang { border-left-color: #FFB7B2; background: #FFF9F9; }
-    .target-card.type-math { border-left-color: #A2E8DD; background: #F4FCFA; }
-    .target-card.type-memo { border-left-color: #FFE699; background: #FFFDF5; }
-
-    .target-card h4 {
-      font-size: 1.05rem;
-      color: #333;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .target-amount {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: var(--primary-pink-dark);
-      margin-top: 4px;
-    }
-
-    /* Study Tip Cards */
-    .tip-card {
-      background: #FFF;
-      border-radius: var(--border-radius-md);
-      padding: 18px;
-      margin-bottom: 14px;
-      box-shadow: var(--shadow-subtle);
-    }
-
-    .tip-tag {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .tip-tag.lang { background: var(--soft-pink); color: #E56A63; }
-    .tip-tag.math { background: var(--soft-mint); color: #2E7D32; }
-    .tip-tag.memo { background: var(--soft-yellow); color: #9E7C00; }
-
-    .tip-steps {
-      list-style-type: none;
-      margin-top: 8px;
-    }
-
-    .tip-steps li {
-      position: relative;
-      padding-left: 20px;
-      margin-bottom: 6px;
-      font-size: 0.9rem;
-      line-height: 1.4;
-    }
-
-    .tip-steps li::before {
-      content: '✔';
-      position: absolute;
-      left: 0;
-      color: var(--primary-pink-dark);
-      font-size: 0.8rem;
-    }
-
-    /* Planner Checklist */
-    .todo-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .todo-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: #FFF;
-      padding: 14px 16px;
-      border-radius: 14px;
-      box-shadow: var(--shadow-subtle);
-      transition: transform 0.2s ease, opacity 0.2s ease;
-    }
-
-    .todo-item.completed {
-      opacity: 0.6;
-      background: #F9F9F9;
-    }
-
-    .todo-item.completed label {
-      text-decoration: line-through;
-      color: var(--text-muted);
-    }
-
-    .custom-checkbox {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      border: 2px solid #DBD3D0;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-
-    .todo-item.completed .custom-checkbox {
-      background: var(--primary-pink);
-      border-color: var(--primary-pink);
-      color: #FFF;
-    }
-
-    .todo-label {
-      flex: 1;
-      font-size: 0.95rem;
-      cursor: pointer;
-    }
-
-    .btn-add-todo-box {
-      display: flex;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    /* Action Buttons */
-    .nav-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 28px;
-      gap: 12px;
-    }
-
-    .btn {
-      padding: 14px 24px;
-      border: none;
-      border-radius: var(--border-radius-md);
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-prev {
-      background: #F0EDED;
-      color: #666;
-    }
-
-    .btn-prev:hover {
-      background: #E2DFDF;
-    }
-
-    .btn-next {
-      background: var(--primary-pink);
-      color: #FFF;
-      margin-left: auto;
-      box-shadow: 0 4px 12px rgba(255, 183, 178, 0.4);
-    }
-
-    .btn-next:hover {
-      background: var(--primary-pink-dark);
-      transform: translateY(-2px);
-    }
-
-    /* Banner Helper Mascot */
-    .mascot-banner {
-      background: var(--soft-pink);
-      border-radius: var(--border-radius-md);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .mascot-icon {
-      font-size: 1.8rem;
-    }
-
-    .mascot-text {
-      font-size: 0.85rem;
-      color: #66525E;
-      line-height: 1.3;
-    }
-
-    @media (max-width: 580px) {
-      .subject-row {
-        grid-template-columns: 1fr 1fr;
-      }
-      .subject-row input:first-child {
-        grid-column: span 2;
-      }
-      .app-container {
-        padding: 20px 16px;
-      }
-    }
-  </style>
+        .bounce-soft {
+            animation: bounceSoft 2.5s infinite ease-in-out;
+        }
+        @keyframes bounceSoft {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen pb-16 flex flex-col items-center justify-start p-4 md:p-8">
 
-  <div class="app-container">
-    <header>
-      <h1 class="brand-title">
-        ✏️ 뽀짝 스터디 플래너
-        <span class="badge">D-Day 스무스 계산</span>
-      </h1>
-      <p class="subtitle">시험범위 분할부터 과목별 꿀팁, 스터디 플래너까지 한 번에!</p>
+    <header class="w-full max-w-2xl text-center my-6">
+        <div class="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-bbojak-sm border border-bbojak-coral text-bbojak-pinkDark font-bold text-xs md:text-sm mb-3 bounce-soft">
+            <span>🐥</span> 시험 공부 완벽 분할! <span>✨</span>
+        </div>
+        <h1 class="text-3xl md:text-5xl font-black text-gray-800 tracking-tight flex items-center justify-center gap-2">
+            <span>💖</span> 뽀짝 스터디 플래너 <span>✏️</span>
+        </h1>
+        <p class="text-gray-500 text-xs md:text-sm mt-2">
+            시험 범위와 D-Day만 적어보세요. 매일 할 수 있는 양만큼 나누어 드려요!
+        </p>
     </header>
 
-    <!-- Step Progress Bar -->
-    <div class="stepper">
-      <div class="step-item active" onclick="goToStep(1)">
-        <div class="step-number">1</div>
-        <div class="step-label">범위 입력</div>
-      </div>
-      <div class="step-item" onclick="goToStep(2)">
-        <div class="step-number">2</div>
-        <div class="step-label">오늘 분량</div>
-      </div>
-      <div class="step-item" onclick="goToStep(3)">
-        <div class="step-number">3</div>
-        <div class="step-label">공부 꿀팁</div>
-      </div>
-      <div class="step-item" onclick="goToStep(4)">
-        <div class="step-number">4</div>
-        <div class="step-label">내 플래너</div>
-      </div>
-    </div>
+    <nav aria-label="단계 안내" class="w-full max-w-2xl mb-8 bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-bbojak border border-pink-100">
+        <div class="flex justify-between items-center relative px-3">
+            <div class="absolute top-1/2 left-6 right-6 h-2 bg-gray-100 -translate-y-1/2 z-0 rounded-full"></div>
+            <div id="progress-line" class="absolute top-1/2 left-6 h-2 bg-gradient-to-r from-bbojak-pinkDark via-purple-400 to-bbojak-mintDark -translate-y-1/2 z-0 rounded-full transition-all duration-500" style="width: 0%;"></div>
 
-    <!-- STEP 1: 시험 범위 입력 -->
-    <div class="step-panel active" id="step1">
-      <div class="mascot-banner">
-        <span class="mascot-icon">🐥</span>
-        <div class="mascot-text">
-          <b>반가워!</b> 시험 목표 날짜와 과목별 범위를 적어줘. 뽀짝이가 하루에 얼마만큼 해야 할지 딱 정해줄게!
+            <!-- Steps -->
+            <button type="button" onclick="goToStep(1)" class="relative z-10 flex flex-col items-center gap-1 group">
+                <div id="step-btn-1" class="w-10 h-10 rounded-2xl bg-bbojak-pinkDark text-white flex items-center justify-center font-bold text-sm shadow-md transition-all">1</div>
+                <span id="step-txt-1" class="text-xs font-bold text-bbojak-pinkDark">시험 범위</span>
+            </button>
+            <button type="button" onclick="goToStep(2)" class="relative z-10 flex flex-col items-center gap-1 group">
+                <div id="step-btn-2" class="w-10 h-10 rounded-2xl bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm transition-all">2</div>
+                <span id="step-txt-2" class="text-xs font-medium text-gray-400">오늘 분량</span>
+            </button>
+            <button type="button" onclick="goToStep(3)" class="relative z-10 flex flex-col items-center gap-1 group">
+                <div id="step-btn-3" class="w-10 h-10 rounded-2xl bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm transition-all">3</div>
+                <span id="step-txt-3" class="text-xs font-medium text-gray-400">과목 꿀팁</span>
+            </button>
+            <button type="button" onclick="goToStep(4)" class="relative z-10 flex flex-col items-center gap-1 group">
+                <div id="step-btn-4" class="w-10 h-10 rounded-2xl bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm transition-all">4</div>
+                <span id="step-txt-4" class="text-xs font-medium text-gray-400">플래너</span>
+            </button>
         </div>
-      </div>
+    </nav>
 
-      <div class="panel-card">
-        <div class="form-group">
-          <label for="exam-date">🗓️ 시험 목표 날짜 (D-Day)</label>
-          <input type="date" id="exam-date" class="input-field">
-        </div>
+    <main class="w-full max-w-2xl">
+        
+        <!-- STEP 1 -->
+        <section id="step-1" class="bg-white rounded-4xl p-6 md:p-8 shadow-bbojak border-2 border-pink-100">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-pink-100">
+                <div class="w-12 h-12 rounded-2xl bg-bbojak-coral flex items-center justify-center text-bbojak-pinkDark text-2xl">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800">1. D-Day 및 과목 설정</h2>
+                    <p class="text-xs md:text-sm text-gray-500">시험 날짜와 과목별 범위를 등록해주세요.</p>
+                </div>
+            </div>
 
-        <div class="form-group">
-          <label>📚 과목 및 시험 범위 입력</label>
-          <div id="subject-list">
-            <!-- Dynamic Subject Rows -->
-          </div>
-          <button type="button" class="btn-add-subject" onclick="addSubjectRow()">+ 과목 추가하기</button>
-        </div>
-      </div>
-    </div>
+            <!-- Date Box -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-bbojak-pink/40 p-4 rounded-3xl border border-pink-100">
+                <div>
+                    <label for="exam-date-input" class="block text-xs font-bold text-gray-700 mb-1.5">📅 시험 날짜 (D-Day)</label>
+                    <input type="date" id="exam-date-input" class="w-full p-3 rounded-2xl border-2 border-pink-200 focus:outline-none focus:border-bbojak-pinkDark bg-white text-gray-800 font-bold text-sm">
+                </div>
+                <div>
+                    <label for="remaining-days-input" class="block text-xs font-bold text-gray-700 mb-1.5">⏰ 남은 공부 기간</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="remaining-days-input" min="1" max="365" class="w-full p-3 rounded-2xl border-2 border-pink-200 focus:outline-none focus:border-bbojak-pinkDark bg-white text-gray-800 font-bold text-sm">
+                        <span class="text-xs font-bold text-gray-600 whitespace-nowrap">일 남음</span>
+                    </div>
+                </div>
+            </div>
 
-    <!-- STEP 2: 오늘의 공부량 -->
-    <div class="step-panel" id="step2">
-      <div class="mascot-banner">
-        <span class="mascot-icon">📝</span>
-        <div class="mascot-text">
-          시험까지 남은 기간 동안 <b>매일 해야 할 추천 공부량</b>이야! 부담 갖지 말고 조금씩 해보자!
-        </div>
-      </div>
+            <!-- Subjects Container -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-gray-800 text-sm md:text-base flex items-center gap-1.5">
+                        <span>📚</span> 과목 범위 적기
+                    </h3>
+                    <button type="button" onclick="loadSampleData()" class="text-xs font-bold text-bbojak-pinkDark bg-pink-50 hover:bg-pink-100 px-3 py-1.5 rounded-full border border-pink-200 transition-all">
+                        ✨ 예시 불러오기
+                    </button>
+                </div>
 
-      <div id="dday-info" style="text-align: center; margin-bottom: 16px; font-weight: bold; color: var(--primary-pink-dark);">
-        <!-- D-Day Message -->
-      </div>
+                <div id="subject-list" class="space-y-4"></div>
 
-      <div class="target-grid" id="target-card-container">
-        <!-- Generated Cards -->
-      </div>
-    </div>
+                <button type="button" onclick="addSubjectRow()" class="mt-4 w-full py-3.5 bg-pink-50 hover:bg-pink-100/70 text-bbojak-pinkDark font-bold rounded-2xl border-2 border-dashed border-pink-200 transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus-circle"></i> 과목 추가하기
+                </button>
+            </div>
 
-    <!-- STEP 3: 맞춤형 공부 꿀팁 -->
-    <div class="step-panel" id="step3">
-      <div class="mascot-banner">
-        <span class="mascot-icon">💡</span>
-        <div class="mascot-text">
-          과목 특성에 맞춰 공부하면 효율이 2배! 뽀짝이가 알려주는 <b>효과적인 공부법</b>을 확인해봐!
-        </div>
-      </div>
+            <button type="button" onclick="submitStep1()" class="w-full py-4 bg-gradient-to-r from-bbojak-pinkDark to-purple-400 text-white font-bold rounded-2xl shadow-bbojak hover:opacity-95 transition-all text-base flex items-center justify-center gap-2">
+                ✨ 오늘 분량 계산하기 <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </section>
 
-      <div id="tips-container">
-        <!-- Generated Tips -->
-      </div>
-    </div>
+        <!-- STEP 2 -->
+        <section id="step-2" class="hidden bg-white rounded-4xl p-6 md:p-8 shadow-bbojak border-2 border-pink-100">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-6 pb-4 border-b border-pink-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-bbojak-mint flex items-center justify-center text-bbojak-mintDark text-2xl">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800">2. 매일 권장 공부량</h2>
+                        <p class="text-xs md:text-sm text-gray-500">시험 날짜에 맞춘 과목별 하루 목표입니다.</p>
+                    </div>
+                </div>
+                <div class="bg-bbojak-yellow px-4 py-2 rounded-2xl border border-yellow-300 font-bold text-gray-800 text-xs shadow-sm">
+                    🔥 <span id="dday-text">D-14! 힘내보아요!</span>
+                </div>
+            </div>
 
-    <!-- STEP 4: 나만의 스터디 플래너 -->
-    <div class="step-panel" id="step4">
-      <div class="mascot-banner">
-        <span class="mascot-icon">🎉</span>
-        <div class="mascot-text">
-          <b>오늘의 스터디 플래너 완성!</b> 완료할 때마다 체크하면 신나는 폭죽 축하가 터져!
-        </div>
-      </div>
+            <div id="daily-target-cards" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8"></div>
 
-      <div class="panel-card">
-        <h3 class="panel-title">✅ Today's To-Do List</h3>
-        <div class="todo-list" id="todo-container">
-          <!-- Todos -->
-        </div>
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-3xl border border-purple-100 mb-8 flex items-start gap-3">
+                <span class="text-2xl">🧸</span>
+                <p class="text-xs md:text-sm text-gray-700 leading-relaxed">
+                    <strong>뽀짝 스터디 플래너 조언:</strong> 큰 범위도 매일 조금씩 나누면 훨씬 쉬워져요! 오늘 분량만 완벽히 끝내고 편하게 쉬어보세요.
+                </p>
+            </div>
 
-        <div class="btn-add-todo-box">
-          <input type="text" id="new-todo-input" class="input-field" placeholder="추가로 해야 할 일 입력하기...">
-          <button class="btn btn-next" style="padding: 10px 18px;" onclick="addCustomTodo()">추가</button>
-        </div>
-      </div>
-    </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="goToStep(1)" class="w-1/3 py-4 bg-gray-100 text-gray-600 font-bold rounded-2xl text-sm">
+                    <i class="fa-solid fa-chevron-left"></i> 범위 수정
+                </button>
+                <button type="button" onclick="goToStep(3)" class="w-2/3 py-4 bg-gradient-to-r from-bbojak-mintDark to-teal-500 text-white font-bold rounded-2xl shadow-bbojak text-sm flex items-center justify-center gap-2">
+                    💡 과목별 공부 꿀팁 <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
 
-    <!-- Navigation Buttons -->
-    <div class="nav-buttons">
-      <button class="btn btn-prev" id="btn-prev" onclick="prevStep()" style="display: none;">이전</button>
-      <button class="btn btn-next" id="btn-next" onclick="nextStep()">다음 단계로 ➔</button>
-    </div>
-  </div>
+        <!-- STEP 3 -->
+        <section id="step-3" class="hidden bg-white rounded-4xl p-6 md:p-8 shadow-bbojak border-2 border-pink-100">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-pink-100">
+                <div class="w-12 h-12 rounded-2xl bg-bbojak-lavender flex items-center justify-center text-bbojak-lavenderDark text-2xl">
+                    <i class="fa-solid fa-lightbulb"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800">3. 맞춤 공부법 팁</h2>
+                    <p class="text-xs md:text-sm text-gray-500">등록한 과목 성격에 꼭 맞는 가이드입니다.</p>
+                </div>
+            </div>
 
-  <script>
-    // State Management
-    let currentStep = 1;
-    let subjects = [
-      { id: 1, name: "국어", amount: 45, unit: "p", type: "lang" },
-      { id: 2, name: "수학", amount: 20, unit: "문제", type: "math" },
-      { id: 3, name: "역사", amount: 15, unit: "장", type: "memo" }
-    ];
-    let todos = [];
+            <div id="subject-tips-container" class="space-y-4 mb-8"></div>
 
-    // Init Logic
-    document.addEventListener("DOMContentLoaded", () => {
-      // Default Date: Today + 7 Days
-      const defaultDate = new Date();
-      defaultDate.setDate(defaultDate.getDate() + 7);
-      document.getElementById('exam-date').value = defaultDate.toISOString().substring(0, 10);
+            <div class="flex gap-3">
+                <button type="button" onclick="goToStep(2)" class="w-1/3 py-4 bg-gray-100 text-gray-600 font-bold rounded-2xl text-sm">
+                    <i class="fa-solid fa-chevron-left"></i> 이전 단계
+                </button>
+                <button type="button" onclick="goToStep(4)" class="w-2/3 py-4 bg-gradient-to-r from-bbojak-lavenderDark to-bbojak-pinkDark text-white font-bold rounded-2xl shadow-bbojak text-sm flex items-center justify-center gap-2">
+                    📝 뽀짝 스터디 플래너 작성하기 <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
 
-      loadLocalStorage();
-      renderSubjectRows();
-    });
+        <!-- STEP 4 -->
+        <section id="step-4" class="hidden bg-white rounded-4xl p-6 md:p-8 shadow-bbojak border-2 border-pink-100">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-6 pb-4 border-b border-pink-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-bbojak-yellow flex items-center justify-center text-amber-600 text-2xl">
+                        <i class="fa-solid fa-heart"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800">4. 뽀짝 스터디 플래너</h2>
+                        <p class="text-xs md:text-sm text-gray-500">오늘 완료한 항목을 누르고 100%를 달성하세요!</p>
+                    </div>
+                </div>
 
-    // Step Controller
-    function updateStepUI() {
-      // Update Stepper Badges
-      document.querySelectorAll('.step-item').forEach((item, idx) => {
-        const stepNum = idx + 1;
-        item.classList.remove('active', 'completed');
-        if (stepNum === currentStep) {
-          item.classList.add('active');
-        } else if (stepNum < currentStep) {
-          item.classList.add('completed');
-        }
-      });
+                <button type="button" onclick="confirmResetData()" class="text-xs text-gray-400 hover:text-pink-500 underline">
+                    초기화
+                </button>
+            </div>
 
-      // Update Panels
-      document.querySelectorAll('.step-panel').forEach((panel, idx) => {
-        panel.classList.toggle('active', idx + 1 === currentStep);
-      });
+            <!-- Achievement Meter -->
+            <div class="bg-gradient-to-r from-pink-50 via-purple-50 to-emerald-50 p-5 rounded-3xl border border-pink-100 mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs md:text-sm font-bold text-gray-700 flex items-center gap-1">
+                        🏆 오늘 공부 달성률
+                    </span>
+                    <span id="planner-completion-percent" class="text-base font-black text-bbojak-pinkDark">0%</span>
+                </div>
+                <div class="w-full h-3.5 bg-gray-100 rounded-full overflow-hidden p-0.5 border border-pink-100">
+                    <div id="planner-bar-fill" class="h-full bg-gradient-to-r from-bbojak-pinkDark via-purple-400 to-bbojak-mintDark rounded-full transition-all duration-500" style="width: 0%;"></div>
+                </div>
+                <p id="planner-motivation-msg" class="text-xs text-center text-gray-600 mt-2.5 font-bold">
+                    첫 항목을 체크하면 뽀짝 스케줄 도장이 찍혀요! 💕
+                </p>
+            </div>
 
-      // Update Prev/Next Buttons
-      const btnPrev = document.getElementById('btn-prev');
-      const btnNext = document.getElementById('btn-next');
+            <!-- Todolist -->
+            <div id="todo-tasks-container" class="space-y-3 mb-6"></div>
 
-      btnPrev.style.display = currentStep === 1 ? 'none' : 'block';
-      
-      if (currentStep === 4) {
-        btnNext.textContent = '✨ 처음 단계로';
-      } else {
-        btnNext.textContent = '다음 단계로 ➔';
-      }
+            <!-- Extra task input -->
+            <div class="flex gap-2 mb-8">
+                <input type="text" id="custom-task-input" placeholder="+ 추가 할 일 (예: 영단어 30개 외우기)" class="flex-1 p-3.5 rounded-2xl border-2 border-pink-200 text-sm focus:outline-none focus:border-bbojak-pinkDark bg-pink-50/20">
+                <button type="button" onclick="addCustomTask()" class="px-5 py-3.5 bg-bbojak-pinkDark hover:bg-bbojak-pinkHover text-white font-bold rounded-2xl text-sm whitespace-nowrap">
+                    추가
+                </button>
+            </div>
 
-      // Step Trigger Actions
-      if (currentStep === 2) calculateDailyTarget();
-      if (currentStep === 3) generateTips();
-      if (currentStep === 4) setupPlanner();
+            <div class="flex justify-between items-center pt-4 border-t border-gray-100 text-xs text-gray-400">
+                <span class="flex items-center gap-1"><i class="fa-solid fa-floppy-disk"></i> 자동 저장중</span>
+                <button type="button" onclick="goToStep(3)" class="text-gray-500 font-bold hover:text-gray-800">
+                    <i class="fa-solid fa-chevron-left"></i> 과목 꿀팁 복습
+                </button>
+            </div>
+        </section>
 
-      saveLocalStorage();
-    }
+    </main>
 
-    function goToStep(step) {
-      currentStep = step;
-      updateStepUI();
-    }
+    <script>
+        const sampleSubjects = [
+            { id: 101, name: '국어', category: 'korean', scope: 40, unit: '페이지' },
+            { id: 102, name: '수학', category: 'math', scope: 50, unit: '페이지' },
+            { id: 103, name: '영어', category: 'english', scope: 10, unit: '지문' },
+            { id: 104, name: '한국사', category: 'memo', scope: 5, unit: '강' }
+        ];
 
-    function nextStep() {
-      if (currentStep < 4) {
-        currentStep++;
-      } else {
-        currentStep = 1;
-      }
-      updateStepUI();
-    }
+        const tipsKnowledgeBase = {
+            korean: {
+                title: '국어 / 언어 / 문학',
+                badgeStyle: 'bg-rose-100 text-rose-700 border-rose-200',
+                icon: '📖',
+                tips: [
+                    '**문맥 구조 잡기**: 단락별 핵심 주제어 및 주요 인물/사건 관계에 밑줄.',
+                    '**출제자 시선 고려**: 문학 작품 속 정서 표출어 및 접속어 중심 읽기.',
+                    '**오답 근거 찾기**: 틀린 문제는 지문 속 문장으로 근거 표기.'
+                ]
+            },
+            math: {
+                title: '수학 / 계산 / 개념',
+                badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200',
+                icon: '📐',
+                tips: [
+                    '**원리 도출 이해**: 공식을 바로 외우기보다 공식 도출 과정 복습.',
+                    '**자력 고민 시간**: 풀리지 않는 문제는 최소 10분간 직접 고민하기.',
+                    '**3회독 오답**: 틀린 풀이는 3일 뒤 답지 없이 재풀이.'
+                ]
+            },
+            english: {
+                title: '영어 / 외국어',
+                badgeStyle: 'bg-amber-100 text-amber-700 border-amber-200',
+                icon: '🔤',
+                tips: [
+                    '**단어 사전 외우기**: 지문 속 생소한 어휘를 미리 암기 후 독해 시작.',
+                    '**끊어 읽기**: 길고 복잡한 문장은 주어/동사 단위 끊어읽기.',
+                    '**낭독 연습**: 독해 후 입으로 2~3번 낭독해 문장 구조 체화.'
+                ]
+            },
+            memo: {
+                title: '사회 / 탐구 / 암기',
+                badgeStyle: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                icon: '🧪',
+                tips: [
+                    '**백지 복습**: 소단원 학습 후 빈 종이에 핵심 내용 인출하기.',
+                    '**인과관계 시각화**: 사건의 원인-과정-결과를 화살표로 연결.',
+                    '**키워드 빈칸 테스트**: 중요 개념 가림판으로 암기 여부 확인.'
+                ]
+            }
+        };
 
-    function prevStep() {
-      if (currentStep > 1) {
-        currentStep--;
-        updateStepUI();
-      }
-    }
+        let state = {
+            currentStep: 1,
+            examDate: '',
+            remainingDays: 14,
+            subjects: [],
+            todos: []
+        };
 
-    // Step 1: Subjects Handler
-    function renderSubjectRows() {
-      const container = document.getElementById('subject-list');
-      container.innerHTML = '';
-
-      subjects.forEach((subj) => {
-        const row = document.createElement('div');
-        row.className = 'subject-row';
-        row.innerHTML = `
-          <input type="text" class="input-field" placeholder="과목명" value="${subj.name}" onchange="updateSubject(${subj.id}, 'name', this.value)">
-          <input type="number" class="input-field" placeholder="전체범위" value="${subj.amount}" onchange="updateSubject(${subj.id}, 'amount', this.value)">
-          <select class="input-field" onchange="updateSubject(${subj.id}, 'unit', this.value)">
-            <option value="페이지" ${subj.unit === '페이지' || subj.unit === 'p' ? 'selected' : ''}>페이지(p)</option>
-            <option value="장" ${subj.unit === '장' ? 'selected' : ''}>장</option>
-            <option value="문제" ${subj.unit === '문제' ? 'selected' : ''}>문제</option>
-            <option value="단어" ${subj.unit === '단어' ? 'selected' : ''}>단어</option>
-          </select>
-          <select class="input-field" onchange="updateSubject(${subj.id}, 'type', this.value)">
-            <option value="lang" ${subj.type === 'lang' ? 'selected' : ''}>국어/외국어</option>
-            <option value="math" ${subj.type === 'math' ? 'selected' : ''}>수학/이과</option>
-            <option value="memo" ${subj.type === 'memo' ? 'selected' : ''}>탐구/암기</option>
-          </select>
-          <button type="button" class="btn-delete" onclick="removeSubject(${subj.id})">✕</button>
-        `;
-        container.appendChild(row);
-      });
-    }
-
-    function addSubjectRow() {
-      const newId = Date.now();
-      subjects.push({ id: newId, name: "", amount: 10, unit: "페이지", type: "lang" });
-      renderSubjectRows();
-    }
-
-    function removeSubject(id) {
-      if (subjects.length <= 1) {
-        alert("최소 1개 이상의 과목이 필요합니다!");
-        return;
-      }
-      subjects = subjects.filter(s => s.id !== id);
-      renderSubjectRows();
-    }
-
-    function updateSubject(id, field, value) {
-      const target = subjects.find(s => s.id === id);
-      if (target) {
-        if (field === 'amount') value = Math.max(1, parseInt(value) || 1);
-        target[field] = value;
-      }
-    }
-
-    // Step 2: D-Day & Calculation Logic
-    function getRemainingDays() {
-      const targetDateVal = document.getElementById('exam-date').value;
-      if (!targetDateVal) return 1;
-
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      const target = new Date(targetDateVal);
-      target.setHours(0,0,0,0);
-
-      const diffTime = target - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      return diffDays > 0 ? diffDays : 1; // Minimum 1 day
-    }
-
-    function calculateDailyTarget() {
-      const days = getRemainingDays();
-      const infoContainer = document.getElementById('dday-info');
-      infoContainer.innerHTML = `🌟 시험까지 <b>${days}일</b> 남았습니다!`;
-
-      const container = document.getElementById('target-card-container');
-      container.innerHTML = '';
-
-      subjects.forEach(subj => {
-        const dailyAmount = Math.ceil(subj.amount / days);
-        const card = document.createElement('div');
-        card.className = `target-card type-${subj.type}`;
-
-        let typeName = "국어/외국어";
-        if (subj.type === 'math') typeName = "수학/이과";
-        if (subj.type === 'memo') typeName = "탐구/암기";
-
-        card.innerHTML = `
-          <h4>
-            <span>${subj.name || '미정 과목'}</span>
-            <span style="font-size:0.75rem; color:#888; font-weight:normal;">${typeName}</span>
-          </h4>
-          <div style="font-size:0.85rem; color:#666;">전체 범위: ${subj.amount}${subj.unit}</div>
-          <div class="target-amount">오늘 하루: 약 ${dailyAmount} ${subj.unit}</div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    // Step 3: Tips Generator
-    function generateTips() {
-      const container = document.getElementById('tips-container');
-      container.innerHTML = '';
-
-      const tipGuides = {
-        lang: {
-          title: "국어 & 외국어 과목 꿀팁",
-          class: "lang",
-          icon: "📖",
-          steps: [
-            "지문 먼저 독해하기: 전체 맥락과 주제를 파악한 뒤 세부 문제로 들어가세요.",
-            "핵심 키워드 정복: 반복되는 단어나 어휘는 노트를 만들어 따로 정리하세요.",
-            "소리 내어 읽기: 어색한 문장이나 문법 구조를 쉽게 파악할 수 있습니다."
-          ]
-        },
-        math: {
-          title: "수학 & 이과 과목 꿀팁",
-          class: "math",
-          icon: "📐",
-          steps: [
-            "개념 정확히 이해하기: 공식을 단순히 암기하기보다 유도 과정을 복습하세요.",
-            "오답 노트 작성: 틀린 문제는 오답 원인을 적고 24시간 뒤 다시 풀어보세요.",
-            "다양한 유형 접근: 대표 예제부터 어려운 수능/학평 기출로 점진 확장하세요."
-          ]
-        },
-        memo: {
-          title: "탐구 & 암기 과목 꿀팁",
-          class: "memo",
-          icon: "💡",
-          steps: [
-            "백지 복습법: 인쇄된 개념을 보고 외운 후, 아무것도 없는 종이에 스케치하듯 쓰세요.",
-            "마인드맵 활용: 큰 단원부터 세부 내용으로 가지를 뻗어나가듯 구조화하세요.",
-            "인터벌 암기: 한 번에 오래 외우기보다 20분 집중 후 5분 쉬는 주기를 반복하세요."
-          ]
-        }
-      };
-
-      const addedTypes = new Set();
-      subjects.forEach(s => addedTypes.add(s.type));
-
-      addedTypes.forEach(type => {
-        const tip = tipGuides[type];
-        if (!tip) return;
-
-        const card = document.createElement('div');
-        card.className = 'tip-card';
-        card.innerHTML = `
-          <span class="tip-tag ${tip.class}">${tip.icon} ${tip.title}</span>
-          <ul class="tip-steps">
-            ${tip.steps.map(step => `<li>${step}</li>`).join('')}
-          </ul>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    // Step 4: Planner Checklist Logic
-    function setupPlanner() {
-      const days = getRemainingDays();
-      
-      // Auto-populate from calculated subjects if list empty
-      if (todos.length === 0) {
-        todos = subjects.map(s => {
-          const daily = Math.ceil(s.amount / days);
-          return {
-            id: Date.now() + Math.random(),
-            text: `${s.name || '과목'} ${daily} ${s.unit} 공부하기`,
-            completed: false
-          };
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedState();
+            setupDefaultDates();
+            renderStep1Subjects();
+            updateStepProgressUI();
         });
-      }
 
-      renderTodos();
-    }
-
-    function renderTodos() {
-      const container = document.getElementById('todo-container');
-      container.innerHTML = '';
-
-      todos.forEach(todo => {
-        const item = document.createElement('div');
-        item.className = `todo-item ${todo.completed ? 'completed' : ''}`;
-        item.innerHTML = `
-          <div class="custom-checkbox" onclick="toggleTodo(${todo.id})">
-            ${todo.completed ? '✔' : ''}
-          </div>
-          <label class="todo-label" onclick="toggleTodo(${todo.id})">${todo.text}</label>
-          <button class="btn-delete" onclick="removeTodo(${todo.id})">✕</button>
-        `;
-        container.appendChild(item);
-      });
-
-      saveLocalStorage();
-    }
-
-    function toggleTodo(id) {
-      const todo = todos.find(t => t.id === id);
-      if (todo) {
-        todo.completed = !todo.completed;
-        if (todo.completed) {
-          triggerConfetti();
+        function loadSavedState() {
+            const saved = localStorage.getItem('bbojak_planner_state');
+            if (saved) {
+                try { state = JSON.parse(saved); } catch(e) {}
+            }
+            if (!state.subjects || state.subjects.length === 0) {
+                state.subjects = JSON.parse(JSON.stringify(sampleSubjects));
+            }
         }
-        renderTodos();
-      }
-    }
 
-    function addCustomTodo() {
-      const input = document.getElementById('new-todo-input');
-      const text = input.value.trim();
-      if (text) {
-        todos.push({
-          id: Date.now(),
-          text: text,
-          completed: false
-        });
-        input.value = '';
-        renderTodos();
-      }
-    }
-
-    function removeTodo(id) {
-      todos = todos.filter(t => t.id !== id);
-      renderTodos();
-    }
-
-    // Celebration Confetti Effect
-    function triggerConfetti() {
-      if (typeof confetti === 'function') {
-        confetti({
-          particleCount: 70,
-          spread: 60,
-          origin: { y: 0.7 },
-          colors: ['#FFB7B2', '#FFD1DC', '#A2E8DD', '#FFE699']
-        });
-      }
-    }
-
-    // Storage System
-    function saveLocalStorage() {
-      const data = {
-        subjects,
-        todos,
-        examDate: document.getElementById('exam-date').value
-      };
-      localStorage.setItem('bbo_djak_study_data', JSON.stringify(data));
-    }
-
-    function loadLocalStorage() {
-      const saved = localStorage.getItem('bbo_djak_study_data');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.subjects && parsed.subjects.length > 0) subjects = parsed.subjects;
-          if (parsed.todos) todos = parsed.todos;
-          if (parsed.examDate) document.getElementById('exam-date').value = parsed.examDate;
-        } catch (e) {
-          console.error("Localstorage parse error", e);
+        function saveState() {
+            localStorage.setItem('bbojak_planner_state', JSON.stringify(state));
         }
-      }
-    }
-  </script>
+
+        function setupDefaultDates() {
+            const dateInput = document.getElementById('exam-date-input');
+            const daysInput = document.getElementById('remaining-days-input');
+
+            if (!state.examDate) {
+                const future = new Date();
+                future.setDate(future.getDate() + 14);
+                state.examDate = future.toISOString().split('T')[0];
+                state.remainingDays = 14;
+            }
+
+            dateInput.value = state.examDate;
+            daysInput.value = state.remainingDays;
+
+            dateInput.addEventListener('change', (e) => {
+                const target = new Date(e.target.value);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+                
+                if (diff > 0) {
+                    daysInput.value = diff;
+                    state.remainingDays = diff;
+                    state.examDate = e.target.value;
+                } else {
+                    alert('시험 날짜는 오늘 이후로 지정해 주세요!');
+                    setupDefaultDates();
+                }
+            });
+
+            daysInput.addEventListener('change', (e) => {
+                const val = parseInt(e.target.value) || 1;
+                state.remainingDays = val;
+                const newTarget = new Date();
+                newTarget.setDate(newTarget.getDate() + val);
+                dateInput.value = newTarget.toISOString().split('T')[0];
+                state.examDate = dateInput.value;
+            });
+        }
+
+        function renderStep1Subjects() {
+            const container = document.getElementById('subject-list');
+            container.innerHTML = '';
+
+            state.subjects.forEach((subj, idx) => {
+                const row = document.createElement('div');
+                row.className = "p-4 bg-pink-50/40 rounded-3xl border border-pink-100 space-y-3";
+                row.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold bg-bbojak-pinkDark text-white px-3 py-0.5 rounded-full">과목 ${idx + 1}</span>
+                        ${state.subjects.length > 1 ? `
+                            <button type="button" onclick="removeSubjectRow(${subj.id})" class="text-xs text-gray-400 hover:text-red-500">
+                                <i class="fa-solid fa-trash-can"></i> 삭제
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">과목명</label>
+                            <input type="text" value="${escapeHtml(subj.name)}" oninput="updateSubjectField(${subj.id}, 'name', this.value)" placeholder="예: 국어" class="w-full p-2.5 rounded-2xl border border-pink-200 text-sm focus:outline-none focus:border-bbojak-pinkDark bg-white font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">과목 유형</label>
+                            <select onchange="updateSubjectField(${subj.id}, 'category', this.value)" class="w-full p-2.5 rounded-2xl border border-pink-200 text-sm focus:outline-none focus:border-bbojak-pinkDark bg-white font-bold">
+                                <option value="korean" ${subj.category === 'korean' ? 'selected' : ''}>국어/문학</option>
+                                <option value="math" ${subj.category === 'math' ? 'selected' : ''}>수학/이과</option>
+                                <option value="english" ${subj.category === 'english' ? 'selected' : ''}>영어/외국어</option>
+                                <option value="memo" ${subj.category === 'memo' ? 'selected' : ''}>사회/탐구/암기</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">전체 범위 수치</label>
+                            <input type="number" min="1" value="${subj.scope}" oninput="updateSubjectField(${subj.id}, 'scope', parseInt(this.value) || 1)" class="w-full p-2.5 rounded-2xl border border-pink-200 text-sm focus:outline-none focus:border-bbojak-pinkDark bg-white font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">단위</label>
+                            <select onchange="updateSubjectField(${subj.id}, 'unit', this.value)" class="w-full p-2.5 rounded-2xl border border-pink-200 text-sm focus:outline-none focus:border-bbojak-pinkDark bg-white font-bold">
+                                <option value="페이지" ${subj.unit === '페이지' ? 'selected' : ''}>페이지(p)</option>
+                                <option value="장" ${subj.unit === '장' ? 'selected' : ''}>장</option>
+                                <option value="개" ${subj.unit === '개' ? 'selected' : ''}>개/문제</option>
+                                <option value="지문" ${subj.unit === '지문' ? 'selected' : ''}>지문</option>
+                                <option value="강" ${subj.unit === '강' ? 'selected' : ''}>강(인강)</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addSubjectRow() {
+            state.subjects.push({ id: Date.now(), name: '', category: 'korean', scope: 30, unit: '페이지' });
+            renderStep1Subjects();
+        }
+
+        function removeSubjectRow(id) {
+            state.subjects = state.subjects.filter(s => s.id !== id);
+            renderStep1Subjects();
+        }
+
+        function updateSubjectField(id, field, value) {
+            const item = state.subjects.find(s => s.id === id);
+            if (item) item[field] = value;
+        }
+
+        function loadSampleData() {
+            state.subjects = JSON.parse(JSON.stringify(sampleSubjects));
+            renderStep1Subjects();
+        }
+
+        function submitStep1() {
+            for (let s of state.subjects) {
+                if (!s.name.trim()) {
+                    alert('과목 이름을 모두 적어주세요!');
+                    return;
+                }
+            }
+            generateCalculations();
+            saveState();
+            goToStep(2);
+        }
+
+        function generateCalculations() {
+            const days = state.remainingDays;
+            state.todos = state.subjects.map(subj => {
+                const dailyVal = Math.ceil(subj.scope / days);
+                return {
+                    id: subj.id,
+                    subjectName: subj.name,
+                    dailyTarget: dailyVal,
+                    unit: subj.unit,
+                    completed: false,
+                    isCustom: false
+                };
+            });
+
+            renderStep2Cards();
+            renderStep3Tips();
+            renderStep4Todos();
+        }
+
+        function renderStep2Cards() {
+            const container = document.getElementById('daily-target-cards');
+            document.getElementById('dday-text').innerText = `D-${state.remainingDays}! 힘내보아요!`;
+            container.innerHTML = '';
+
+            state.subjects.forEach(subj => {
+                const dailyVal = Math.ceil(subj.scope / state.remainingDays);
+                const card = document.createElement('div');
+                card.className = "bg-gradient-to-br from-pink-50/60 to-purple-50/60 p-5 rounded-3xl border border-pink-100 shadow-sm";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-extrabold text-gray-800 text-sm">📚 ${escapeHtml(subj.name)}</span>
+                        <span class="text-xs bg-white px-2.5 py-0.5 rounded-full text-bbojak-pinkDark font-bold border border-pink-100">
+                            총 ${subj.scope}${subj.unit}
+                        </span>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-pink-100 flex justify-between items-baseline">
+                        <span class="text-xs text-gray-500 font-bold">하루 권장</span>
+                        <span class="text-lg font-extrabold text-bbojak-pinkDark">
+                            하루 <span class="text-2xl text-purple-600 underline font-black">${dailyVal}</span> ${subj.unit}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderStep3Tips() {
+            const container = document.getElementById('subject-tips-container');
+            container.innerHTML = '';
+
+            state.subjects.forEach(subj => {
+                const tipInfo = tipsKnowledgeBase[subj.category] || tipsKnowledgeBase.korean;
+                const card = document.createElement('div');
+                card.className = "p-5 rounded-3xl bg-white border border-pink-100 shadow-sm space-y-3";
+
+                const tipsHtml = tipInfo.tips.map(t => {
+                    const formatted = t.replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-800 font-bold">$1</strong>');
+                    return `<li class="text-xs md:text-sm text-gray-600 flex items-start gap-2"><span class="text-bbojak-pinkDark font-bold">•</span><span>${formatted}</span></li>`;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">${tipInfo.icon}</span>
+                            <span class="font-bold text-gray-800 text-sm">${escapeHtml(subj.name)}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${tipInfo.badgeStyle}">${tipInfo.title}</span>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 pt-1">${tipsHtml}</ul>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderStep4Todos() {
+            const container = document.getElementById('todo-tasks-container');
+            container.innerHTML = '';
+
+            state.todos.forEach(todo => {
+                const item = document.createElement('div');
+                item.className = `p-4 rounded-3xl border transition-all flex items-center justify-between gap-3 ${
+                    todo.completed ? 'bg-emerald-50/70 border-emerald-200' : 'bg-white border-pink-100'
+                }`;
+
+                const taskLabel = todo.isCustom
+                    ? escapeHtml(todo.subjectName)
+                    : `<strong>${escapeHtml(todo.subjectName)}</strong> : 오늘 <span class="text-bbojak-pinkDark font-black underline">${todo.dailyTarget}${todo.unit}</span> 공부하기`;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-3 flex-1 cursor-pointer select-none" onclick="toggleTodoItem(${todo.id})">
+                        <div class="w-6 h-6 rounded-xl border-2 ${todo.completed ? 'bg-bbojak-mintDark border-bbojak-mintDark text-white' : 'border-pink-300 bg-white'} flex items-center justify-center text-xs font-bold">
+                            ${todo.completed ? '<i class="fa-solid fa-check"></i>' : ''}
+                        </div>
+                        <span class="text-xs md:text-sm ${todo.completed ? 'line-through text-gray-400' : 'text-gray-800'}">
+                            ${taskLabel}
+                        </span>
+                    </div>
+                    ${todo.completed ? '<span class="stamp-effect text-[11px] font-bold bg-bbojak-mint text-emerald-800 px-2 py-0.5 rounded-xl border border-emerald-300">뽀짝 도장! ✨</span>' : ''}
+                    ${todo.isCustom ? `<button type="button" onclick="removeCustomTask(${todo.id})" class="text-gray-300 hover:text-red-400 text-xs p-1"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                `;
+                container.appendChild(item);
+            });
+
+            updateProgressMeter();
+        }
+
+        function toggleTodoItem(id) {
+            const todo = state.todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                if (todo.completed && typeof confetti === 'function') {
+                    confetti({ particleCount: 50, spread: 60, origin: { y: 0.75 } });
+                }
+                saveState();
+                renderStep4Todos();
+            }
+        }
+
+        function addCustomTask() {
+            const input = document.getElementById('custom-task-input');
+            const val = input.value.trim();
+            if (!val) return;
+
+            state.todos.push({
+                id: Date.now(),
+                subjectName: val,
+                dailyTarget: 0,
+                unit: '',
+                completed: false,
+                isCustom: true
+            });
+
+            input.value = '';
+            saveState();
+            renderStep4Todos();
+        }
+
+        function removeCustomTask(id) {
+            state.todos = state.todos.filter(t => t.id !== id);
+            saveState();
+            renderStep4Todos();
+        }
+
+        function updateProgressMeter() {
+            if (!state.todos || state.todos.length === 0) return;
+            const completed = state.todos.filter(t => t.completed).length;
+            const total = state.todos.length;
+            const percent = Math.round((completed / total) * 100);
+
+            document.getElementById('planner-bar-fill').style.width = `${percent}%`;
+            document.getElementById('planner-completion-percent').innerText = `${percent}%`;
+
+            const msg = document.getElementById('planner-motivation-msg');
+            if (percent === 0) msg.innerText = "첫 항목을 체크하면 뽀짝 스탬프가 찍혀요! 💕";
+            else if (percent < 100) msg.innerText = "멋져요! 차근차근 뽀짝하게 채워가보아요 🐥";
+            else msg.innerText = "🎉 축하합니다! 오늘 하루 공부 목표 100% 완벽 달성! 💖";
+        }
+
+        function goToStep(stepNum) {
+            state.currentStep = stepNum;
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`step-${i}`).classList.add('hidden');
+            }
+            document.getElementById(`step-${stepNum}`).classList.remove('hidden');
+            updateStepProgressUI();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateStepProgressUI() {
+            const current = state.currentStep;
+            const percentMap = [0, 0, 33, 66, 100];
+            document.getElementById('progress-line').style.width = `${percentMap[current]}%`;
+
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.getElementById(`step-btn-${i}`);
+                const txt = document.getElementById(`step-txt-${i}`);
+                if (i <= current) {
+                    btn.className = "w-10 h-10 rounded-2xl bg-bbojak-pinkDark text-white flex items-center justify-center font-bold text-sm shadow-md transition-all";
+                    txt.className = "text-xs font-bold text-bbojak-pinkDark transition-colors";
+                } else {
+                    btn.className = "w-10 h-10 rounded-2xl bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm transition-all";
+                    txt.className = "text-xs font-medium text-gray-400 transition-colors";
+                }
+            }
+        }
+
+        function confirmResetData() {
+            if (confirm("처음으로 돌아가시겠습니까? 작성한 플래너 데이터가 초기화됩니다.")) {
+                localStorage.removeItem('bbojak_planner_state');
+                state.subjects = JSON.parse(JSON.stringify(sampleSubjects));
+                state.todos = [];
+                setupDefaultDates();
+                renderStep1Subjects();
+                goToStep(1);
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
 </body>
 </html>
